@@ -1,6 +1,6 @@
 {
-  "name": "@DedalusDIIT/cornerstone-core",
-  "version": "2.2.9",
+  "name": "@dedalusdiit/cornerstone-core",
+  "version": "2.2.10",
   "description": "HTML5 Medical Image Viewer Component",
   "main": "./dist/cornerstone.js",
   "keywords": [
@@ -13,6 +13,7 @@
   "license": "MIT",
   "module": "./dist/cornerstone.js",
   "publishConfig": {
+    "cache": "~/.npm",
     "registry": "https://npm.pkg.github.com/"
   },
   "repository": {

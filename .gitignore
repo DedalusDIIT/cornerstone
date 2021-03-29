@@ -7,3 +7,4 @@ docs/_book
 docs/api.md
 dist/
 .DS_Store
+~/.npm
