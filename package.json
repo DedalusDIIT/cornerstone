@@ -13,6 +13,7 @@
   "license": "MIT",
   "module": "./dist/cornerstone.js",
   "publishConfig": {
+    "cache": "~/.npm",
     "registry": "https://npm.pkg.github.com/"
   },
   "repository": {
