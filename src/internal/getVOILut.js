@@ -60,7 +60,10 @@ function generateNonLinearVOILUT (voiLUT, roundModalityLUTValues) {
 }
 
 /**
- *
+ * Generates a sigmoid voi lut function. 
+ * The formula used is provided by the standard: 
+ * https://dicom.nema.org/medical/dicom/current/output/chtml/part03/sect_C.11.2.html#sect_C.11.2.1.3
+ * 
  * @param {Number} windowWidth Window Width
  * @param {Number} windowCenter Window Center
  * @returns {VOILUTFunction} VOI LUT mapping function
