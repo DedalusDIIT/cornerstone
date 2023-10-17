@@ -52,4 +52,17 @@ describe('getVOILut', function () {
     assert.equal(vlutfn(3), 255);
     assert.equal(vlutfn(256), 255);
   });
+
+  it('should create a sigmoid VOI LUT function', function () {
+    // Act
+    const vlutfn = getVOILut(this.windowWidth, this.windowCenter, this.voiLUT, null, 'SIGMOID');
+
+    // Assert
+    assert.approximately(vlutfn(-1), 30, 0.2);
+    assert.approximately(vlutfn(0), 30, 0.7);
+    assert.approximately(vlutfn(1), 31, 0.3);
+    assert.approximately(vlutfn(2), 31, 0.5);
+    assert.approximately(vlutfn(3), 31, 0.9);
+    assert.approximately(vlutfn(256), 225, 0.3);
+  });
 });
