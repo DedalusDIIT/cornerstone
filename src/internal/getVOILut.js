@@ -28,6 +28,33 @@ function generateLinearVOILUT (windowWidth, windowCenter) {
 }
 
 /**
+ * Generates a linear exact VOI LUT function (DICOM LINEAR_EXACT)
+ * The formula used is provided by the standard: 
+ * https://dicom.nema.org/medical/dicom/current/output/chtml/part03/sect_C.11.2.html#sect_C.11.2.1.3.2
+ * 
+ * @param {Number} windowWidth Window Width
+ * @param {Number} windowCenter Window Center
+ * @returns {VOILUTFunction} VOI LUT mapping function (DICOM LINEAR_EXACT)
+ * @memberof VOILUT
+ */
+function generateLinearExactVOILUT (windowWidth, windowCenter) {
+  const yMin = 0;
+  const yMax = 255;
+
+  return function (x) {
+    if (x <= (windowCenter - windowWidth / 2)) {
+      return yMin;
+    }
+    else if (x > (windowCenter + windowWidth / 2)) {
+      return yMax;
+    }
+    else {
+      return ((x - windowCenter) / windowWidth + 0.5) * (yMax - yMin) + yMin;
+    }
+  };
+}
+
+/**
  * Generate a non-linear volume of interest lookup table
  *
  * @param {LUT} voiLUT Volume of Interest Lookup Table Object
@@ -99,6 +126,10 @@ export default function (windowWidth, windowCenter, voiLUT, roundModalityLUTValu
 
   if (voiLUT) {
     return generateNonLinearVOILUT(voiLUT, roundModalityLUTValues);
+  }
+
+  if (voiLUTFunction === 'LINEAR_EXACT') {
+    return generateLinearExactVOILUT(windowWidth, windowCenter);
   }
 
   return generateLinearVOILUT(windowWidth, windowCenter);
