@@ -124,12 +124,12 @@ export default function (windowWidth, windowCenter, voiLUT, roundModalityLUTValu
     return generateSigmoidVOILUT(windowWidth, windowCenter);
   }
 
-  if (voiLUT) {
-    return generateNonLinearVOILUT(voiLUT, roundModalityLUTValues);
-  }
-
   if (voiLUTFunction === 'LINEAR_EXACT') {
     return generateLinearExactVOILUT(windowWidth, windowCenter);
+  }
+
+  if (voiLUT) {
+    return generateNonLinearVOILUT(voiLUT, roundModalityLUTValues);
   }
 
   return generateLinearVOILUT(windowWidth, windowCenter);
