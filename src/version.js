@@ -1,1 +1,1 @@
-export default '2.6.1-ded3';
+export default '2.6.1-ded4';
