@@ -53,6 +53,26 @@ describe('getVOILut', function () {
     assert.equal(vlutfn(256), 255);
   });
 
+  it('should create a LINEAR_EXACT function and apply the formula for in-range values', function () {
+    const vlutfn = getVOILut(100, 50, null, null, 'LINEAR_EXACT');
+
+    const expectedCenterValue = ((50 - 50) / 100 + 0.5) * 255;
+    assert.approximately(vlutfn(50), expectedCenterValue, 1e-3);
+
+    const expectedMidValue = ((25 - 50) / 100 + 0.5) * 255;
+    assert.approximately(vlutfn(25), expectedMidValue, 1e-3, 'Should match linear exact formula for mid-range input');
+  });
+
+  it('should clamp values below and above the specified window range', function () {
+    const vlutfn = getVOILut(100, 50, null, null, 'LINEAR_EXACT');
+
+    assert.equal(vlutfn(-5), 0, 'Values below 0 clamp to 0');
+    assert.equal(vlutfn(0), 0, 'Value at lower boundary => 0');
+
+    assert.equal(vlutfn(101), 255, 'Values above 100 clamp to 255');
+    assert.equal(vlutfn(100), 255, 'Value at upper boundary => 255');
+  });
+
   it('should create a sigmoid VOI LUT function', function () {
     // Act
     const vlutfn = getVOILut(this.windowWidth, this.windowCenter, this.voiLUT, null, 'SIGMOID');
