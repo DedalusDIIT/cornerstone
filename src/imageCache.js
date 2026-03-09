@@ -15,6 +15,9 @@ const imageCacheDict = {};
 // Array of cachedImage objects
 export const cachedImages = [];
 
+// Set of imageIds that are pinned and should not be evicted from the cache
+const pinnedImageIds = new Set();
+
 /** Sets the maximum size of cache and purges cache contents if necessary.
  *
  * @param {number} numBytes The maximun size that the cache should occupy.
@@ -59,14 +62,23 @@ function purgeCacheIfNecessary () {
   }
   cachedImages.sort(compare);
 
-  // Remove images as necessary)
-  while (cacheSizeInBytes > maximumSizeInBytes) {
-    const lastCachedImage = cachedImages[cachedImages.length - 1];
-    const imageId = lastCachedImage.imageId;
+  // Remove images as necessary, skipping pinned images
+  let i = cachedImages.length - 1;
+  
+  while (cacheSizeInBytes > maximumSizeInBytes && i >= 0) {
+    const candidateImage = cachedImages[i];
+    const imageId = candidateImage.imageId;
+
+    if (pinnedImageIds.has(imageId)) {
+      i--;
+      continue;
+    }
 
     removeImageLoadObject(imageId);
-
     triggerEvent(events, EVENTS.IMAGE_CACHE_PROMISE_REMOVED, { imageId });
+
+    // After removal, the array has shifted, so reset index to the end
+    i = cachedImages.length - 1;
   }
 
   const cacheInfo = getCacheInfo();
@@ -279,6 +291,37 @@ export function changeImageIdCacheSize (imageId, newCacheSize) {
   }
 }
 
+/**
+ * Pins an image in the cache so it cannot be evicted by the LRU purge.
+ * Use this for images that are actively referenced by measurement tools.
+ *
+ * @param {string} imageId The imageId to pin
+ * @returns {void}
+ */
+export function pinImage (imageId) {
+  pinnedImageIds.add(imageId);
+}
+
+/**
+ * Unpins an image so it can be evicted normally.
+ *
+ * @param {string} imageId The imageId to unpin
+ * @returns {void}
+ */
+export function unpinImage (imageId) {
+  pinnedImageIds.delete(imageId);
+}
+
+/**
+ * Checks if an image is currently pinned.
+ *
+ * @param {string} imageId The imageId to check
+ * @returns {boolean} True if the image is pinned
+ */
+export function isImagePinned (imageId) {
+  return pinnedImageIds.has(imageId);
+}
+
 export default {
   imageCache: imageCacheDict,
   cachedImages,
@@ -288,5 +331,8 @@ export default {
   removeImageLoadObject,
   getCacheInfo,
   purgeCache,
-  changeImageIdCacheSize
+  changeImageIdCacheSize,
+  pinImage,
+  unpinImage,
+  isImagePinned
 };

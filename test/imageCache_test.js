@@ -7,7 +7,10 @@ import { default as imageCache,
   removeImageLoadObject,
   getCacheInfo,
   // changeImageIdCacheSize,
-  purgeCache } from '../src/imageCache.js';
+  purgeCache,
+  pinImage,
+  unpinImage,
+  isImagePinned } from '../src/imageCache.js';
 
 import { events } from '../src/events.js';
 
@@ -301,6 +304,127 @@ describe('Store, retrieve, and remove imagePromises from the cache', function ()
       assert.equal(cacheInfo.cacheSizeInBytes, 1000);
 
       done();
+    });
+  });
+});
+
+describe('Pin and unpin images in the cache', function () {
+  before(function () {
+    purgeCache();
+  });
+
+  afterEach(function () {
+    purgeCache();
+    // Clean up any pins left over
+    unpinImage('anImageId');
+  });
+
+  it('should pin an image and report it as pinned', function () {
+    pinImage('anImageId');
+
+    assert.isTrue(isImagePinned('anImageId'));
+  });
+
+  it('should report an unpinned image as not pinned', function () {
+    assert.isFalse(isImagePinned('anImageId'));
+  });
+
+  it('should unpin a previously pinned image', function () {
+    pinImage('anImageId');
+    unpinImage('anImageId');
+
+    assert.isFalse(isImagePinned('anImageId'));
+  });
+
+  it('should not evict a pinned image when cache is full', function (done) {
+    // Use a cache that fits exactly one image so eviction is deterministic
+    setMaximumSizeBytes(100);
+
+    const image0 = { imageId: 'imageId-0', sizeInBytes: 100 };
+
+    image0.decache = () => {};
+
+    const image1 = { imageId: 'imageId-1', sizeInBytes: 100 };
+
+    image1.decache = () => {};
+
+    const loadObject0 = {
+      promise: new Promise((resolve) => resolve(image0)),
+      cancelFn: undefined
+    };
+
+    const loadObject1 = {
+      promise: new Promise((resolve) => resolve(image1)),
+      cancelFn: undefined
+    };
+
+    // Pin imageId-0 before adding images
+    pinImage('imageId-0');
+
+    putImageLoadObject('imageId-0', loadObject0);
+    putImageLoadObject('imageId-1', loadObject1);
+
+    // After both promises resolve, imageId-1 is the only eviction candidate
+    Promise.all([loadObject0.promise, loadObject1.promise]).then(() => {
+      // The pinned image should still be in the cache
+      assert.isDefined(getImageLoadObject('imageId-0'));
+
+      // The unpinned image should have been evicted
+      assert.isUndefined(getImageLoadObject('imageId-1'));
+
+      unpinImage('imageId-0');
+      done();
+    });
+  });
+
+  it('should evict a previously pinned image after unpinning when cache is full', function (done) {
+    // Use a cache that fits exactly one image
+    setMaximumSizeBytes(100);
+
+    const image0 = { imageId: 'imageId-0', sizeInBytes: 100 };
+
+    image0.decache = () => {};
+
+    const loadObject0 = {
+      promise: new Promise((resolve) => resolve(image0)),
+      cancelFn: undefined
+    };
+
+    // Pin imageId-0, add it to cache
+    pinImage('imageId-0');
+    putImageLoadObject('imageId-0', loadObject0);
+
+    loadObject0.promise.then(() => {
+      // imageId-0 is cached and pinned, cache is full (100/100)
+      assert.isDefined(getImageLoadObject('imageId-0'));
+
+      // Unpin it so it becomes eligible for eviction
+      unpinImage('imageId-0');
+
+      // Pin imageId-1 so it must survive
+      pinImage('imageId-1');
+
+      const image1 = { imageId: 'imageId-1', sizeInBytes: 100 };
+
+      image1.decache = () => {};
+
+      const loadObject1 = {
+        promise: new Promise((resolve) => resolve(image1)),
+        cancelFn: undefined
+      };
+
+      putImageLoadObject('imageId-1', loadObject1);
+
+      loadObject1.promise.then(() => {
+        // The previously pinned (now unpinned) image should have been evicted
+        assert.isUndefined(getImageLoadObject('imageId-0'));
+
+        // The newly pinned image should remain
+        assert.isDefined(getImageLoadObject('imageId-1'));
+
+        unpinImage('imageId-1');
+        done();
+      });
     });
   });
 });
