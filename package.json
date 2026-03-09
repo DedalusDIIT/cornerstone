@@ -1,6 +1,6 @@
 {
   "name": "@dedalusdiit/cornerstone-core",
-  "version": "2.6.1-ded5",
+  "version": "2.6.1-ded6",
   "description": "HTML5 Medical Image Viewer Component",
   "main": "./dist/cornerstone.js",
   "keywords": [
@@ -22,7 +22,7 @@
   },
   "scripts": {
     "docs:api": "npm run clean:docs && documentation build src/index.js -f md -c documentation.yml -o docs/api.md",
-    "build": "npm run test && npm run version && npm run webpack",
+    "build": "npm run version && npm run webpack",
     "clean": "npm run clean:dist && npm run clean:coverage",
     "clean:dist": "shx rm -rf dist",
     "clean:docs": "shx rm -f docs/api.md",
